@@ -46,6 +46,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 	if err != nil {
 		return nil, err
 	}
+	defer handle.Close()
 	pe.data, err = mmap.Map(handle, mmap.RDONLY, 0)
 	if err != nil {
 		return nil, err
