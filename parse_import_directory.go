@@ -1,13 +1,14 @@
 /* This File will have the logic for parsing 32bit and 64bit Import Directories and Descriptors */
 
-package pe
+package pefile
 
 import (
 	"errors"
 	"fmt"
-	"github.com/omarghader/pefile-go/lib"
 	"log"
 	"reflect"
+
+	"github.com/Codehardt/go-pefile/lib"
 )
 
 /* Parse the import directory.

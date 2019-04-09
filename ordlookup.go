@@ -1,13 +1,13 @@
-package pe
+package pefile
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 )
 
-var OrdNames = map[string]map[uint64]string {
-	"ws2_32.dll": WS2_32_ORD_NAMES,
-	"wsock32.dll": WS2_32_ORD_NAMES,
+var OrdNames = map[string]map[uint64]string{
+	"ws2_32.dll":   WS2_32_ORD_NAMES,
+	"wsock32.dll":  WS2_32_ORD_NAMES,
 	"oleaut32.dll": OLEAUT_32_ORD_NAMES,
 }
 

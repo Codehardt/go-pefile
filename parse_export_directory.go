@@ -1,9 +1,11 @@
-package pe
+package pefile
 
 import (
 	"errors"
 	"fmt"
-	"github.com/omarghader/pefile-go/lib"
+
+	"github.com/Codehardt/go-pefile/lib"
+
 	//"reflect"
 	"log"
 )

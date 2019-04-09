@@ -1,4 +1,4 @@
-package pe
+package pefile
 
 /*
   TODO: figure out how to detect endianess instead of forcing LittleEndian
@@ -11,12 +11,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	mmap "github.com/edsrzf/mmap-go"
-	"github.com/omarghader/pefile-go/lib"
 	"log"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/Codehardt/go-pefile/lib"
+	mmap "github.com/edsrzf/mmap-go"
 )
 
 /* The representation of the PEFile with some helpful abstractions */
