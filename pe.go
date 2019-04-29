@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/Codehardt/go-pefile/lib"
-	mmap "github.com/edsrzf/mmap-go"
+	mmap "github.com/Codehardt/mmap-go"
 )
 
 /* The representation of the PEFile with some helpful abstractions */
