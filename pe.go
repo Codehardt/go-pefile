@@ -46,7 +46,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 	if err != nil {
 		return nil, err
 	}
-	defer handle.Close()
+
 	pe.data, err = mmap.Map(handle, mmap.RDONLY, 0)
 	if err != nil {
 		return nil, err
@@ -202,6 +202,10 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 	}*/
 
 	return pe, nil
+}
+
+func (self *PEFile) Close() error {
+	return self.data.Unmap()
 }
 
 type ByVAddr []*lib.SectionHeader
