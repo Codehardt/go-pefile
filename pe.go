@@ -49,6 +49,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 	pe.data, err = mmap.Map(handle, mmap.RDONLY, 0)
 	if err != nil {
+		handle.Close()
 		return nil, err
 	}
 
@@ -56,18 +57,22 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 	pe.DosHeader = lib.NewDosHeader(uint32(0x0))
 	if err = pe.parseHeader(&pe.DosHeader.Data, offset, pe.DosHeader.Size); err != nil {
+		pe.data.Unmap()
 		return nil, err
 	}
 
 	if pe.DosHeader.Data.E_magic == IMAGE_DOSZM_SIGNATURE {
+		pe.data.Unmap()
 		return nil, errors.New("Probably a ZM Executable (not a PE file).")
 	}
 
 	if pe.DosHeader.Data.E_magic != IMAGE_DOS_SIGNATURE {
+		pe.data.Unmap()
 		return nil, errors.New("DOS Header magic not found.")
 	}
 
 	if pe.DosHeader.Data.E_lfanew > pe.dataLen {
+		pe.data.Unmap()
 		return nil, errors.New("Invalid e_lfanew value, probably not a PE file")
 	}
 
@@ -75,18 +80,24 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 	pe.NTHeader = lib.NewNTHeader(offset)
 	if err = pe.parseHeader(&pe.NTHeader.Data, offset, pe.NTHeader.Size); err != nil {
+		pe.data.Unmap()
 		return nil, err
 	}
 
 	if (0xFFFF & pe.NTHeader.Data.Signature) == IMAGE_NE_SIGNATURE {
+		pe.data.Unmap()
 		return nil, errors.New("Invalid NT Headers signature. Probably a NE file")
 	} else if (0xFFFF & pe.NTHeader.Data.Signature) == IMAGE_LE_SIGNATURE {
+		pe.data.Unmap()
 		return nil, errors.New("Invalid NT Headers signature. Probably a LE file")
 	} else if (0xFFFF & pe.NTHeader.Data.Signature) == IMAGE_LX_SIGNATURE {
+		pe.data.Unmap()
 		return nil, errors.New("Invalid NT Headers signature. Probably a LX file")
 	} else if (0xFFFF & pe.NTHeader.Data.Signature) == IMAGE_TE_SIGNATURE {
+		pe.data.Unmap()
 		return nil, errors.New("Invalid NT Headers signature. Probably a TE file")
 	} else if pe.NTHeader.Data.Signature != IMAGE_NT_SIGNATURE {
+		pe.data.Unmap()
 		return nil, errors.New("Invalid NT Headers signature.")
 	}
 
@@ -94,6 +105,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 	pe.FileHeader = lib.NewFileHeader(offset)
 	if err = pe.parseHeader(&pe.FileHeader.Data, offset, pe.FileHeader.Size); err != nil {
+		pe.data.Unmap()
 		return nil, err
 	}
 	lib.SetFlags(pe.FileHeader.Flags, lib.ImageCharacteristics, uint32(pe.FileHeader.Data.Characteristics))
@@ -104,6 +116,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 	pe.OptionalHeader = lib.NewOptionalHeader(offset)
 	if err = pe.parseHeader(&pe.OptionalHeader.Data, offset, pe.OptionalHeader.Size); err != nil {
+		pe.data.Unmap()
 		return nil, err
 	}
 	lib.SetFlags(pe.OptionalHeader.Flags, lib.DllCharacteristics, uint32(pe.OptionalHeader.Data.DllCharacteristics))
@@ -111,10 +124,12 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 	if pe.OptionalHeader.Data.Magic == OPTIONAL_HEADER_MAGIC_PE_PLUS {
 		pe.OptionalHeader64 = lib.NewOptionalHeader64(offset)
 		if err = pe.parseHeader(&pe.OptionalHeader64.Data, offset, pe.OptionalHeader64.Size); err != nil {
+			pe.data.Unmap()
 			return nil, err
 		}
 
 		if pe.OptionalHeader64.Data.Magic != OPTIONAL_HEADER_MAGIC_PE_PLUS {
+			pe.data.Unmap()
 			return nil, errors.New("No Optional Header found, invalid PE32 or PE32+ file")
 		}
 		lib.SetFlags(pe.OptionalHeader64.Flags, lib.DllCharacteristics, uint32(pe.OptionalHeader64.Data.DllCharacteristics))
@@ -162,6 +177,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 		dirEntry := lib.NewDataDirectory(offset)
 		if err = pe.parseHeader(&dirEntry.Data, offset, dirEntry.Size); err != nil {
+			pe.data.Unmap()
 			return nil, err
 		}
 		offset += dirEntry.Size
@@ -178,6 +194,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 	offset, err = pe.parseSections(sectionOffset)
 	if err != nil {
+		pe.data.Unmap()
 		return nil, err
 	}
 
@@ -194,6 +211,7 @@ func NewPEFile(filename string) (pe *PEFile, err error) {
 
 	err = pe.parseDataDirectories()
 	if err != nil {
+		pe.data.Unmap()
 		return nil, err
 	}
 	/*offset, err = pe.parseRichHeader()
